@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auto-Quiz Generator | Transform PDFs to Quizzes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --primary-color: #6c5ce7;
+        --primary-dark: #5649c0;
+        --secondary-color: #00cec9;
+        --accent-color: #fd79a8;
+        --light-color: #f8f9fa;
+        --dark-color: #2d3436;
+        --gray-color: #636e72;
+        --light-gray: #dfe6e9;
+        --success-color: #00b894;
+        --error-color: #d63031;
+        --warning-color: #fdcb6e;
+
+        --gradient-primary: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+        --gradient-secondary: linear-gradient(135deg, #00cec9 0%, #81ecec 100%);
+        --gradient-accent: linear-gradient(135deg, #fd79a8 0%, #fab1a0 100%);
+
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+        --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+        --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+
+        --border-radius-sm: 8px;
+        --border-radius-md: 12px;
+        --border-radius-lg: 16px;
+        --border-radius-circle: 50%;
+
+        --transition-fast: 0.2s ease;
+        --transition-normal: 0.3s ease;
+        --transition-slow: 0.5s ease;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f5f6fa;
+        color: var(--dark-color);
+        line-height: 1.7;
+        overflow-x: hidden;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      /* Header Styles */
+      header {
+        position: relative;
+        overflow: hidden;
+        padding: 4rem 0 6rem;
+        margin-bottom: -3rem;
+        text-align: center;
+        color: white;
+        background: var(--gradient-primary);
+        border-bottom-left-radius: 30% 20%;
+        border-bottom-right-radius: 30% 20%;
+        box-shadow: var(--shadow-md);
+        z-index: 1;
+      }
+
+      header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd' opacity='0.1'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        z-index: -1;
+      }
+
+      h1 {
+        font-family: "Montserrat", sans-serif;
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        max-width: 700px;
+        margin: 0 auto 2rem;
+        opacity: 0.9;
+        font-weight: 300;
+      }
+
+      /* Card Styles */
+      .card {
+        background: white;
+        border-radius: var(--border-radius-lg);
+        padding: 2.5rem;
+        margin-bottom: 3rem;
+        box-shadow: var(--shadow-md);
+        position: relative;
+        z-index: 2;
+        transition: var(--transition-normal);
+      }
+
+      .card:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-5px);
+      }
+
+      .card-header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .card-header h2 {
+        font-family: "Montserrat", sans-serif;
+        font-size: 1.8rem;
+        color: var(--primary-dark);
+        margin-bottom: 0.5rem;
+      }
+
+      .card-header p {
+        color: var(--gray-color);
+        font-size: 0.95rem;
+      }
+
+      /* Form Styles */
+      .form-group {
+        margin-bottom: 1.8rem;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.8rem;
+        font-weight: 500;
+        color: var(--dark-color);
+        font-size: 1rem;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid var(--light-gray);
+        border-radius: var(--border-radius-sm);
+        font-family: inherit;
+        font-size: 1rem;
+        transition: var(--transition-fast);
+        background-color: white;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+      }
+
+      /* File Upload Styles */
+      .file-upload {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 2rem;
+        border: 2px dashed var(--light-gray);
+        border-radius: var(--border-radius-md);
+        cursor: pointer;
+        transition: var(--transition-normal);
+        background-color: rgba(108, 92, 231, 0.03);
+        text-align: center;
+        min-height: 200px;
+      }
+
+      .file-upload:hover {
+        border-color: var(--primary-color);
+        background-color: rgba(108, 92, 231, 0.05);
+      }
+
+      .file-upload i {
+        font-size: 3.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        transition: var(--transition-normal);
+      }
+
+      .file-upload:hover i {
+        transform: scale(1.1);
+      }
+
+      .file-upload p {
+        margin-bottom: 0.5rem;
+        color: var(--gray-color);
+      }
+
+      .file-upload input {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .file-name {
+        font-weight: 500;
+        color: var(--primary-dark);
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        background-color: rgba(108, 92, 231, 0.1);
+        border-radius: var(--border-radius-sm);
+        transition: var(--transition-fast);
+      }
+
+      /* Button Styles */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: var(--gradient-primary);
+        color: white;
+        padding: 1.1rem 2rem;
+        border: none;
+        border-radius: var(--border-radius-sm);
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-normal);
+        text-align: center;
+        text-decoration: none;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .btn:hover {
+        background: var(--primary-dark);
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn-block {
+        display: flex;
+        width: 100%;
+      }
+
+      .btn-accent {
+        background: var(--gradient-accent);
+      }
+
+      .btn-accent:hover {
+        background: #fc5c9c;
+      }
+
+      .btn:disabled {
+        background: var(--light-gray);
+        color: var(--gray-color);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      /* Alert Styles */
+      .alert {
+        padding: 1rem 1.5rem;
+        border-radius: var(--border-radius-sm);
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+      }
+
+      .alert i {
+        font-size: 1.2rem;
+      }
+
+      .alert-error {
+        background-color: #ffebee;
+        color: var(--error-color);
+        border-left: 4px solid var(--error-color);
+      }
+
+      .alert-success {
+        background-color: #e8f5e9;
+        color: var(--success-color);
+        border-left: 4px solid var(--success-color);
+      }
+
+      /* Features Section */
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin: 3rem 0;
+      }
+
+      .feature-card {
+        background: white;
+        padding: 2rem;
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition-normal);
+        text-align: center;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
+      }
+
+      .feature-icon {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gradient-secondary);
+        color: white;
+        border-radius: var(--border-radius-circle);
+        font-size: 1.8rem;
+      }
+
+      .feature-card h3 {
+        font-family: "Montserrat", sans-serif;
+        margin-bottom: 1rem;
+        color: var(--primary-dark);
+      }
+
+      .feature-card p {
+        color: var(--gray-color);
+        font-size: 0.95rem;
+      }
+
+      /* Footer Styles */
+      footer {
+        text-align: center;
+        margin-top: 4rem;
+        padding: 2rem 0;
+        color: var(--gray-color);
+        font-size: 0.9rem;
+        border-top: 1px solid var(--light-gray);
+      }
+
+      .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .footer-links a {
+        color: var(--gray-color);
+        text-decoration: none;
+        transition: var(--transition-fast);
+      }
+
+      .footer-links a:hover {
+        color: var(--primary-color);
+      }
+
+      /* Animation */
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      .floating {
+        animation: float 3s ease-in-out infinite;
+      }
+
+      /* Responsive Styles */
+      @media (max-width: 768px) {
+        .container {
+          padding: 0 1.5rem;
+        }
+
+        header {
+          padding: 3rem 0 5rem;
+          border-bottom-left-radius: 20% 10%;
+          border-bottom-right-radius: 20% 10%;
+        }
+
+        h1 {
+          font-size: 2.2rem;
+        }
+
+        .subtitle {
+          font-size: 1rem;
+        }
+
+        .card {
+          padding: 1.8rem;
+        }
+
+        .features {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 480px) {
+        header {
+          padding: 2.5rem 0 4rem;
+        }
+
+        h1 {
+          font-size: 1.8rem;
+        }
+
+        .card {
+          padding: 1.5rem;
+        }
+
+        .btn {
+          padding: 0.9rem 1.5rem;
+          font-size: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Auto-Quiz Generator</h1>
+        <p class="subtitle">
+          Transform your study materials into interactive quizzes with
+          NLP-powered question generation
+        </p>
+      </header>
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">
+        <i
+          class="fas fa-{% if category == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"
+        ></i>
+        {{ message }}
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <h3>Instant Generation</h3>
+          <p>Create quizzes in seconds from your PDF documents.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-graduation-cap"></i>
+          </div>
+          <h3>Smart Questions</h3>
+          <p>
+            Get meaningful fill-in-the-blank and multiple choice questions that
+            test real understanding.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-file-pdf"></i>
+          </div>
+          <h3>PDF Output</h3>
+          <p>
+            Download neatly formatted quiz PDFs ready for printing or digital
+            use.
+          </p>
+        </div>
+      </div>
+
+      <form method="POST" enctype="multipart/form-data" class="card">
+        <div class="card-header">
+          <h2>Create Your Quiz</h2>
+          <p>Upload your PDF and customize your quiz settings</p>
+        </div>
+
+        <div class="form-group">
+          <label for="file">Upload Study Material</label>
+          <div class="file-upload">
+            <i class="fas fa-file-pdf floating"></i>
+            <p>Drag & drop your PDF here or click to browse</p>
+            <p>Supports all standard PDF documents</p>
+            <p class="file-name" id="file-name">No file selected</p>
+            <input type="file" name="file" id="file" accept=".pdf" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="fib_count">
+            <i class="fas fa-pencil-alt" style="margin-right: 8px"></i>
+            Number of Fill-in-the-Blank Questions
+          </label>
+          <input
+            type="number"
+            name="fib_count"
+            id="fib_count"
+            min="1"
+            max="50"
+            value="10"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="mcq_count">
+            <i class="fas fa-list-ul" style="margin-right: 8px"></i>
+            Number of Multiple Choice Questions
+          </label>
+          <input
+            type="number"
+            name="mcq_count"
+            id="mcq_count"
+            min="1"
+            max="50"
+            value="15"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-accent btn-block"
+          id="generate-btn"
+        >
+          <i class="fas fa-magic"></i> Generate Quiz Now
+        </button>
+      </form>
+
+      <footer>
+        <div class="footer-links">
+          <a href="#"><i class="fas fa-question-circle"></i> Help</a>
+          <a href="#"><i class="fas fa-envelope"></i> Contact</a>
+          <a href="#"><i class="fas fa-shield-alt"></i> Privacy</a>
+          <a href="#"><i class="fas fa-file-alt"></i> Terms</a>
+        </div>
+        <p>
+          Auto-Quiz Generator &copy; 2025 | Created by Aashita N. & Prajwal J.B
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      document.getElementById("file").addEventListener("change", function (e) {
+        const fileName = document.getElementById("file-name");
+        if (this.files.length > 0) {
+          fileName.textContent = this.files[0].name;
+          fileName.style.color = "var(--success-color)";
+        } else {
+          fileName.textContent = "No file selected";
+          fileName.style.color = "var(--gray-color)";
+        }
+      });
+
+      // Form submission handler
+      document.querySelector("form").addEventListener("submit", function (e) {
+        const btn = document.getElementById("generate-btn");
+        btn.disabled = true;
+        btn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Generating Your Quiz...';
+
+        setTimeout(() => {
+          this.submit();
+        }, 100);
+      });
+    </script>
+  </body>
+</html>
